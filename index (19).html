@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WEBDEV SA — Business Websites & AI Automation, South Africa</title>
+<meta name="description" content="Professional websites, booking systems and AI automation for South African businesses.">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --navy:#070b16; --navy-2:#0c1326; --navy-3:#111a35; --panel:#0f1730;
+  --line:#22304f; --blue:#3b82f6; --blue-bright:#5ea1ff; --blue-soft:rgba(59,130,246,.12);
+  --white:#f4f7fc; --grey:#93a0bd; --grey-dim:#6b7797; --ok:#34d399;
+  --font:'Segoe UI',system-ui,sans-serif; --radius:14px; --radius-lg:22px;
+}
+*{box-sizing:border-box;}
+html,body{max-width:100%; overflow-x:hidden;}
+body{margin:0; background:var(--navy); color:var(--white); font-family:var(--font); line-height:1.6;}
+h1,h2,h3,h4{margin:0; line-height:1.15; letter-spacing:-.01em; font-weight:700;}
+p{margin:0;} a{color:inherit; text-decoration:none;} ul{margin:0; padding:0; list-style:none;} button{font:inherit; cursor:pointer;}
+.wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
+.pad{padding:80px 0;} @media (max-width:760px){ .pad{padding:52px 0;} }
+body::before{content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:radial-gradient(circle at 15% 0%, rgba(59,130,246,.14), transparent 45%),
+  radial-gradient(circle at 90% 20%, rgba(59,130,246,.08), transparent 40%), var(--navy);}
+.eyebrow{display:inline-flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--blue-bright); margin-bottom:14px;}
+.eyebrow::before{content:""; width:18px; height:1px; background:var(--blue-bright);}
+h1.h1{font-size:clamp(2.1rem,6vw,3.6rem);}
+h2.h2{font-size:clamp(1.6rem,4vw,2.3rem);}
+.lead{color:var(--grey); font-size:1.03rem; max-width:640px;}
+.section-head{max-width:680px; margin-bottom:38px;}
+.section-head .lead{margin-top:12px;}
+.center{margin-left:auto; margin-right:auto; text-align:center;}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:13px 26px; border-radius:999px; font-weight:700; font-size:.95rem; border:1px solid transparent; background:none; color:var(--white);}
+.btn-primary{background:var(--blue); color:#fff;} .btn-primary:hover{background:var(--blue-bright);}
+.btn-ghost{background:transparent; border-color:var(--line);} .btn-ghost:hover{border-color:var(--blue-bright); color:var(--blue-bright);}
+.btn-row{display:flex; gap:14px; flex-wrap:wrap; margin-top:26px;}
+.icon{width:20px; height:20px; stroke:currentColor; stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; display:block; flex-shrink:0;}
+
+/* ---------- loader ---------- */
+#loader{position:fixed; inset:0; background:var(--navy); z-index:999; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:18px; transition:opacity .4s ease, visibility .4s ease;}
+#loader .brand{font-size:1.6rem; font-weight:800;}
+#loader .brand span{color:var(--blue-bright);}
+#loader .tag{color:var(--grey); font-size:.85rem; letter-spacing:.08em; text-transform:uppercase;}
+.spinner{width:34px; height:34px; border-radius:50%; border:3px solid var(--line); border-top-color:var(--blue-bright); animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#loader.hide{opacity:0; visibility:hidden; pointer-events:none;}
+@media (prefers-reduced-motion:reduce){ .spinner{animation:none; border-top-color:var(--blue-bright);} }
+
+/* ---------- header / nav ---------- */
+header{position:sticky; top:0; z-index:60; background:rgba(7,11,22,.9); backdrop-filter:blur(10px); border-bottom:1px solid var(--line);}
+.nav{display:flex; align-items:center; justify-content:space-between; padding:16px 24px; max-width:1180px; margin:0 auto;}
+.brand{font-weight:800; font-size:1.15rem; cursor:pointer; display:flex; align-items:center; gap:10px;}
+.brand span{color:var(--blue-bright);}
+.brand-logo{width:38px; height:38px; display:block; flex-shrink:0;}
+.loader-logo{width:88px; height:88px; margin-bottom:6px;}
+.foot-logo{width:56px; height:56px; margin:0 auto 12px;}
+.navlinks{display:flex; gap:20px; font-size:.9rem; color:var(--grey);}
+.navlinks a{padding:6px 2px; border-bottom:2px solid transparent;}
+.navlinks a:hover{color:var(--white);}
+.navlinks a.active{color:var(--white); border-color:var(--blue-bright);}
+.navphone{display:flex; align-items:center; gap:8px; font-weight:700; font-size:.9rem;}
+.navphone .icon{width:17px; height:17px; color:var(--blue-bright);}
+.nav-actions{display:flex; align-items:center; gap:18px;}
+.menu-btn{display:none; background:transparent; border:1px solid var(--line); border-radius:8px; width:40px; height:40px; align-items:center; justify-content:center; color:var(--white);}
+@media (max-width:900px){
+  .navlinks{position:fixed; top:0; right:0; height:100%; width:min(78vw,320px); background:var(--navy-2); border-left:1px solid var(--line);
+    flex-direction:column; padding:96px 28px 28px; gap:20px; transform:translateX(100%); transition:transform .3s ease; z-index:65;}
+  .navlinks.open{transform:translateX(0);}
+  .menu-btn{display:inline-flex;} .navphone{display:none;}
+}
+.nav-overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:62;}
+.nav-overlay.open{display:block;}
+
+/* ---------- views / routing ---------- */
+main{min-height:60vh;}
+.view{display:none; animation:fadein .35s ease;}
+.view.active{display:block;}
+@keyframes fadein{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+@media (prefers-reduced-motion:reduce){ .view{animation:none;} }
+
+/* ---------- cards / grids ---------- */
+.grid{display:grid; gap:20px;}
+.g3{grid-template-columns:repeat(3,1fr);} .g2{grid-template-columns:repeat(2,1fr);}
+@media (max-width:760px){ .g3,.g2{grid-template-columns:1fr;} }
+.card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); padding:26px; transition:border-color .25s, transform .25s;}
+.card:hover{border-color:var(--blue-bright); transform:translateY(-3px);}
+.card h3{font-size:1.03rem; margin-bottom:8px;} .card p{color:var(--grey); font-size:.92rem;}
+.icon-dot{width:42px; height:42px; border-radius:11px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center; margin-bottom:16px; color:var(--blue-bright);}
+
+/* ---------- pricing ---------- */
+.price-card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); padding:30px; position:relative; display:flex; flex-direction:column;}
+.price-card.featured{border-color:var(--blue);}
+.price-tag{position:absolute; top:-12px; right:24px; background:var(--blue); color:#fff; font-size:.72rem; font-weight:700; padding:4px 12px; border-radius:999px;}
+.price{font-size:2rem; font-weight:800; margin:6px 0 18px;}
+.price-card ul{flex:1;}
+.price-card ul li{color:var(--grey); font-size:.87rem; padding:8px 0; border-top:1px solid var(--line); display:flex; gap:8px;}
+.price-card ul li:first-child{border-top:none;}
+.price-card ul li .icon{width:15px; height:15px; margin-top:3px; color:var(--ok);}
+
+/* ---------- steps ---------- */
+.steps{display:grid; gap:16px; grid-template-columns:repeat(4,1fr);}
+@media (max-width:900px){ .steps{grid-template-columns:repeat(2,1fr);} }
+.step{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px;}
+.step .num{color:var(--blue-bright); font-weight:800; font-size:1.25rem;}
+.step p{color:var(--grey); font-size:.85rem; margin-top:6px;}
+
+/* ---------- portfolio ---------- */
+.port-card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); overflow:hidden; transition:transform .25s, border-color .25s; text-align:left;}
+.port-card:hover{transform:translateY(-3px); border-color:var(--blue-bright);}
+.port-thumb{height:150px; background:linear-gradient(135deg,var(--navy-3),var(--blue-soft)); display:flex; align-items:center; justify-content:center; color:var(--blue-bright); overflow:hidden;}
+.port-thumb-img{padding:0;}
+.port-thumb-img img{width:100%; height:100%; object-fit:cover; object-position:top; display:block;}
+.port-body{padding:20px;}
+.tag{display:inline-block; font-size:.72rem; color:var(--blue-bright); text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px; font-weight:700;}
+.view-btn{margin-top:12px; font-size:.82rem; color:var(--blue-bright); display:inline-flex; align-items:center; gap:6px;}
+
+/* ---------- lightbox ---------- */
+#lightbox{position:fixed; inset:0; background:rgba(4,7,15,.9); z-index:200; display:none; align-items:center; justify-content:center; padding:24px;}
+#lightbox.open{display:flex;}
+.lb-box{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); max-width:720px; width:100%; padding:28px; position:relative; max-height:88vh; overflow:auto;}
+.lb-img{width:100%; border-radius:var(--radius); border:1px solid var(--line); margin-bottom:18px; display:block;}
+.lb-close{position:absolute; top:14px; right:14px; width:36px; height:36px; border-radius:50%; background:var(--navy-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; color:var(--white);}
+.lb-icon{width:64px; height:64px; border-radius:16px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center; color:var(--blue-bright); margin-bottom:18px;}
+.lb-icon .icon{width:32px; height:32px;}
+
+/* ---------- form ---------- */
+.form-card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); padding:32px;}
+.form-row{display:grid; gap:16px; grid-template-columns:1fr 1fr;}
+@media (max-width:640px){ .form-row{grid-template-columns:1fr;} }
+.field{display:flex; flex-direction:column; gap:6px; margin-bottom:16px;}
+.field label{font-size:.82rem; color:var(--grey);}
+.field input, .field select, .field textarea{background:var(--navy-2); border:1px solid var(--line); border-radius:10px; padding:12px 14px; color:var(--white); font-size:.92rem; font-family:inherit;}
+.field input:focus, .field select:focus, .field textarea:focus{outline:none; border-color:var(--blue-bright);}
+.field textarea{resize:vertical; min-height:100px;}
+#formMsg{margin-top:16px; font-size:.9rem; display:none; align-items:center; gap:8px;}
+#formMsg.show{display:flex;} #formMsg.ok{color:var(--ok);}
+.contact-box{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); padding:26px;}
+.contact-box h3{margin-bottom:8px; font-size:1.02rem;} .contact-box p{color:var(--grey); font-size:.9rem;}
+.map-frame{border:1px solid var(--line); border-radius:var(--radius-lg); overflow:hidden; margin-top:28px; height:340px;}
+.map-frame iframe{width:100%; height:100%; border:0; display:block;}
+
+footer{padding:50px 0; text-align:center; color:var(--grey-dim); font-size:.85rem; border-top:1px solid var(--line);}
+footer .btn-row{justify-content:center;}
+footer .foot-links{display:flex; gap:22px; justify-content:center; flex-wrap:wrap; margin:22px 0; font-size:.85rem; color:var(--grey);}
+footer .foot-links a:hover{color:var(--white);}
+</style>
+</head>
+<body>
+
+<div id="loader"><img class="loader-logo" src="images/img-01.png" alt="WEBDEV SA logo"><div class="brand" style="font-size:1.6rem;">WEBDEV <span>SA</span></div><p class="tag">WE BUILD. YOU GROW.</p><div class="spinner"></div></div>
+
+<div class="nav-overlay" id="overlay"></div>
+<header>
+  <div class="nav">
+    <div class="brand" data-route="home" onclick="navigate('home')"><img class="brand-logo" src="images/img-02.png" alt="WEBDEV SA logo">WEBDEV <span>SA</span></div>
+    <div class="nav-actions">
+      <ul class="navlinks" id="navLinks">
+        <li><a href="#/home" data-route="home" class="nl">Home</a></li>
+        <li><a href="#/websites" data-route="websites" class="nl">Websites</a></li>
+        <li><a href="#/packages" data-route="packages" class="nl">Packages</a></li>
+        <li><a href="#/ai-automation" data-route="ai-automation" class="nl">AI Automation</a></li>
+        <li><a href="#/our-work" data-route="our-work" class="nl">Our Work</a></li>
+        <li><a href="#/how-it-works" data-route="how-it-works" class="nl">How It Works</a></li>
+        <li><a href="#/about" data-route="about" class="nl">About</a></li>
+        <li><a href="#/contact" data-route="contact" class="nl">Contact</a></li>
+      </ul>
+      <a href="tel:0719205239" class="navphone">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        071 920 5239
+      </a>
+      <button class="menu-btn" id="menuBtn" aria-label="Toggle menu" aria-expanded="false">
+        <svg class="icon" id="menuIcon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- HOME -->
+<section class="view" id="view-home">
+  <div class="pad" style="display:grid; grid-template-columns:1.15fr .85fr; gap:40px; align-items:center;">
+    <div>
+      <div class="eyebrow">Website development · South Africa</div>
+      <h1 class="h1">WE DON'T JUST BUILD WEBSITES.<br>WE BUILD SOLUTIONS.</h1>
+      <p class="lead" style="margin-top:18px;">Professional websites and practical digital solutions designed to help businesses save time, organise customer enquiries and grow online.</p>
+      <div class="btn-row">
+        <a href="#/contact" class="btn btn-primary">Get a Free Website Demo</a>
+        <a href="#/our-work" class="btn btn-ghost">View Our Work</a>
+      </div>
+    </div>
+    <div style="border-radius:22px; overflow:hidden; border:1px solid var(--line); aspect-ratio:4/5;">
+      <img src="https://images.unsplash.com/photo-1719400471588-575b23e27bd7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=900" alt="Developer coding on multiple screens" style="width:100%; height:100%; object-fit:cover; display:block;">
+    </div>
+  </div>
+  <style>@media (max-width:760px){ #view-home > .pad:first-child{ grid-template-columns:1fr !important; } }</style>
+  <div class="pad" style="padding-top:0;">
+    <div class="eyebrow">What we do</div>
+    <h2 class="h2">Website solutions & AI automation</h2>
+    <div class="grid g2" style="margin-top:30px;">
+      <div class="card">
+        <div class="icon-dot"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg></div>
+        <h3>Website Solutions</h3>
+        <p>Business sites, online stores, booking sites and enquiry systems — built around what your business actually needs.</p>
+        <div class="btn-row"><a href="#/websites" class="btn btn-ghost">Explore Websites</a></div>
+      </div>
+      <div class="card">
+        <div class="icon-dot"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h6v6H9z"/><path d="M4 9H2M4 15H2M22 9h-2M22 15h-2M9 4V2M15 4V2M9 22v-2M15 22v-2"/></svg></div>
+        <h3>AI Automation</h3>
+        <p>Practical automation for repetitive tasks — booking capture, reference numbers and business notifications.</p>
+        <div class="btn-row"><a href="#/ai-automation" class="btn btn-ghost">Explore AI Automation</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="pad" style="padding-top:0;">
+    <div class="grid g3">
+      <div class="card"><div class="icon-dot"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><h3>Save Time</h3><p>Reduce repetitive customer questions and manual processes.</p></div>
+      <div class="card"><div class="icon-dot"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div><h3>Organise Enquiries</h3><p>Capture customer information in a structured way.</p></div>
+      <div class="card"><div class="icon-dot"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div><h3>Accept Bookings</h3><p>Let customers submit booking or enquiry requests online.</p></div>
+    </div>
+    <div class="btn-row"><a href="#/contact" class="btn btn-primary">Free Website Demo</a><a href="#/contact" class="btn btn-ghost">Contact WEBDEV SA</a></div>
+  </div>
+</section>
+
+<!-- WEBSITES -->
+<section class="view" id="view-websites">
+  <div class="pad">
+    <div class="section-head">
+      <div class="eyebrow">Websites</div>
+      <h2 class="h2">Websites we build</h2>
+      <p class="lead">We build websites around your business, not generic templates. Every business is organised differently — we start with what yours actually needs.</p>
+    </div>
+    <div class="grid g3">
+      <div class="card"><h3>Business Website</h3><p>Professional online presence with services, pricing and contact details.</p></div>
+      <div class="card"><h3>Online Store</h3><p>Product listings, categories and a clear path from browsing to enquiry.</p></div>
+      <div class="card"><h3>Booking Website</h3><p>For salons, photographers, guesthouses, clinics and appointment-based businesses.</p></div>
+      <div class="card"><h3>Enquiry / Quotation Website</h3><p>Customers submit detailed requests before a quote — construction, events, custom work.</p></div>
+      <div class="card"><h3>Portfolio Website</h3><p>For photographers, designers and creatives whose work should be the focus.</p></div>
+      <div class="card"><h3>Landing Page</h3><p>One focused page for marketing campaigns and specific services.</p></div>
+    </div>
+    <div class="btn-row"><a href="#/contact" class="btn btn-primary">Request a Website</a><a href="#/packages" class="btn btn-ghost">See Packages</a></div>
+  </div>
+</section>
+
+<!-- PACKAGES -->
+<section class="view" id="view-packages">
+  <div class="pad">
+    <div class="section-head center">
+      <div class="eyebrow">Packages</div>
+      <h2 class="h2">Straightforward packages, no hidden extras</h2>
+      <p class="lead center">Three packages based on what most businesses actually need. Payment processing is not included — we discuss that separately if relevant.</p>
+    </div>
+    <div class="grid g3">
+      <div class="price-card">
+        <h3>Starter</h3><div class="price">R1,500</div>
+        <ul>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Up to 5 pages</li>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Professional design</li>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Services & About/Contact pages</li>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>WhatsApp enquiry button</li>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Mobile-friendly, Google Maps</li>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Basic SEO setup</li>
+        </ul>
+        <button class="btn btn-ghost" style="width:100%;" onclick="requestPackage('Starter (R1,500)')">Request This Package</button>
+      </div>
+      <div class="price-card featured"><span class="price-tag">Most requested</span>
+        <h3>Professional</h3><div class="price">R3,000</div>
+        <ul>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Up to 8 pages, everything in Starter</li>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Blog / news & gallery</li>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Custom design</li>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>WhatsApp + email forms</li>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Speed & SEO optimisation</li>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>15 days of minor updates</li>
+        </ul>
+        <button class="btn btn-primary" style="width:100%;" onclick="requestPackage('Professional (R3,000)')">Request This Package</button>
+      </div>
+      <div class="price-card">
+        <h3>Advanced</h3><div class="price">R5,000</div>
+        <ul>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Up to 10 pages, everything in Pro</li>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Advanced animations</li>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Booking / quotation system</li>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Customer enquiry management</li>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Google Business integration</li>
+          <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Domain + Search setup</li>
+        </ul>
+        <button class="btn btn-ghost" style="width:100%;" onclick="requestPackage('Advanced (R5,000)')">Request This Package</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AI AUTOMATION -->
+<section class="view" id="view-ai-automation">
+  <div class="pad">
+    <div class="section-head">
+      <div class="eyebrow">AI Automation</div>
+      <h2 class="h2">Stop doing repetitive business tasks manually</h2>
+      <p class="lead">WEBDEV SA builds practical automation systems around repetitive business processes — not generic "AI" for its own sake.</p>
+    </div>
+    <div class="grid g2" style="margin-bottom:32px;">
+      <div class="card">
+        <h3>AI Booking & Receipt Generator</h3>
+        <p style="margin-top:8px;">Captures booking requests, generates unique reference numbers, keeps records organised, and notifies your business automatically.</p>
+        <button class="btn btn-primary" style="margin-top:20px;" onclick="requestPackage('AI Booking & Receipt Generator')">Ask About AI Automation</button>
+      </div>
+      <div class="card">
+        <div class="price">R2,800 <span style="font-size:.85rem; color:var(--grey); font-weight:400;">once-off setup</span></div>
+        <p>+ R600 / month maintenance</p>
+      </div>
+    </div>
+    <div class="grid g3">
+      <div class="card"><h3>Capture booking requests</h3><p>Collects requests from your website or channels.</p></div>
+      <div class="card"><h3>Structured customer info</h3><p>Captures the details you actually need.</p></div>
+      <div class="card"><h3>Unique reference numbers</h3><p>Every booking gets its own traceable reference.</p></div>
+      <div class="card"><h3>Organised records</h3><p>Keeps every booking in one organised place.</p></div>
+      <div class="card"><h3>Confirmation emails</h3><p>Automatic confirmation sent to the customer.</p></div>
+      <div class="card"><h3>Business notifications</h3><p>Owner is notified as soon as a booking comes in.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- OUR WORK -->
+<section class="view" id="view-our-work">
+  <div class="pad">
+    <div class="section-head">
+      <div class="eyebrow">Our Work</div>
+      <h2 class="h2">A look at what we've built</h2>
+      <p class="lead">A mix of our own website builds and design concepts across industries. Concepts are clearly labelled — they are not real client projects unless stated otherwise. Click a project to view it larger.</p>
+    </div>
+    <div class="grid g3" id="portfolioGrid">
+      <button class="port-card" data-title="Uzzithebarber" data-tag="Salons & Beauty" data-desc="Barbershop booking website — concept." data-img="images/img-03.jpg">
+        <div class="port-thumb port-thumb-img"><img loading="lazy" src="images/img-03.jpg" alt="UTB Uzzithebarber website homepage"></div>
+        <div class="port-body"><span class="tag">Salons & Beauty</span><h3>Uzzithebarber</h3><p>Barbershop booking website — concept.</p><span class="view-btn"><svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>View project</span></div>
+      </button>
+      <button class="port-card" data-title="Shineway Auto Spa" data-tag="Car Wash" data-desc="Premium car wash and detailing website — concept." data-img="images/img-04.jpg">
+        <div class="port-thumb port-thumb-img"><img loading="lazy" src="images/img-04.jpg" alt="Shineway Auto Spa website homepage"></div>
+        <div class="port-body"><span class="tag">Car Wash</span><h3>Shineway Auto Spa</h3><p>Premium car wash and detailing website — concept.</p><span class="view-btn"><svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>View project</span></div>
+      </button>
+      <button class="port-card" data-title="Luxury Car Dealership" data-tag="Automotive" data-desc="Vehicle showcase and enquiry website — design example." data-img="images/img-05.jpg">
+        <div class="port-thumb port-thumb-img"><img loading="lazy" src="images/img-05.jpg" alt="Luxury Car Dealership website homepage"></div>
+        <div class="port-body"><span class="tag">Automotive</span><h3>Luxury Car Dealership</h3><p>Vehicle showcase and enquiry website — design example.</p><span class="view-btn"><svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>View project</span></div>
+      </button>
+      <button class="port-card" data-title="GreenHarvest" data-tag="Farming" data-desc="Produce and farm equipment store — concept." data-img="images/img-06.jpg">
+        <div class="port-thumb port-thumb-img"><img loading="lazy" src="images/img-06.jpg" alt="GreenHarvest website homepage"></div>
+        <div class="port-body"><span class="tag">Farming</span><h3>GreenHarvest</h3><p>Produce and farm equipment store — concept.</p><span class="view-btn"><svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>View project</span></div>
+      </button>
+      <button class="port-card" data-title="Johnson Container House" data-tag="Construction" data-desc="Container home builder quotation website — concept." data-img="images/img-07.jpg">
+        <div class="port-thumb port-thumb-img"><img loading="lazy" src="images/img-07.jpg" alt="Johnson Container House website homepage"></div>
+        <div class="port-body"><span class="tag">Construction</span><h3>Johnson Container House</h3><p>Container home builder quotation website — concept.</p><span class="view-btn"><svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>View project</span></div>
+      </button>
+      <button class="port-card" data-title="Aurora Coffee House" data-tag="Restaurants" data-desc="Café menu and reservations website — concept.">
+        <div class="port-thumb"><svg class="icon" viewBox="0 0 24 24" style="width:30px;height:30px;"><path d="M4 8h13a3 3 0 0 1 0 6h-1M4 8v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3M4 8V6a2 2 0 0 1 2-2h5"/></svg></div>
+        <div class="port-body"><span class="tag">Restaurants</span><h3>Aurora Coffee House</h3><p>Café menu and reservations website — concept.</p><span class="view-btn"><svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>View project</span></div>
+      </button>
+      <button class="port-card" data-title="IntelliClass" data-tag="Education Platform" data-desc="AI-powered learning platform website — live tutoring, recorded classes, quizzes and verifiable certificates for individuals, schools and enterprises." data-img="images/img-08.jpg">
+        <div class="port-thumb port-thumb-img"><img loading="lazy" src="images/img-08.jpg" alt="IntelliClass website homepage"></div>
+        <div class="port-body"><span class="tag">Education Platform</span><h3>IntelliClass</h3><p>AI-powered learning platform — website build.</p><span class="view-btn"><svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>View project</span></div>
+      </button>
+    </div>
+    <p class="lead" style="margin-top:24px;">More categories — real estate, mechanic, photography, guesthouse, travel, healthcare, law, e-commerce and more — available on request.</p>
+
+    <div class="section-head" style="margin-top:56px;">
+      <div class="eyebrow">AI Automation Projects</div>
+      <h2 class="h2" style="font-size:clamp(1.4rem,3vw,1.9rem);">Automations we've built for clients</h2>
+      <p class="lead">Real n8n workflows built and deployed for client businesses — screenshots of the actual live automations. Click to view full size.</p>
+    </div>
+    <div class="grid g3">
+      <button class="port-card" data-title="School Application AI Assessment" data-tag="AI Automation" data-desc="An AI automation for a school: a parent submits an application form, the AI reviews it against admission criteria and generates an assessment, then the system automatically stores the application, emails a confirmation to the parent, notifies the admin team, and shows a success page — no manual processing required." data-img="images/img-09.jpg">
+        <div class="port-thumb port-thumb-img"><img loading="lazy" src="images/img-09.jpg" alt="School Application AI Assessment automation workflow"></div>
+        <div class="port-body"><span class="tag">AI Automation</span><h3>School Application AI Assessment</h3><p>Form submission → AI review → auto-store, confirmation email, admin alert.</p><span class="view-btn"><svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>View project</span></div>
+      </button>
+      <button class="port-card" data-title="AI Booking & Enquiry Agent" data-tag="AI Automation" data-desc="A multi-channel AI booking agent that receives enquiries from a Google Form, webhook, chat or email, normalises the data, and uses an AI model with conversation memory to assess and respond to bookings — automatically confirming bookings, flagging potential fraud, logging activity and replying to the client." data-img="images/img-10.jpg">
+        <div class="port-thumb port-thumb-img"><img loading="lazy" src="images/img-10.jpg" alt="AI Booking and Enquiry Agent automation workflow"></div>
+        <div class="port-body"><span class="tag">AI Automation</span><h3>AI Booking & Enquiry Agent</h3><p>Multi-channel intake → AI assessment → confirm, alert, log & reply automatically.</p><span class="view-btn"><svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>View project</span></div>
+      </button>
+      <button class="port-card" data-title="Booking Receipt & PDF Generator" data-tag="AI Automation" data-desc="An automation that turns an incoming email booking into a complete receipt: it normalises the booking, generates a unique receipt number, saves it to Google Sheets, creates a calendar event, generates an HTML receipt, converts it to a PDF, emails the PDF receipt to the customer, and updates the confirmation status — fully automatic." data-img="images/img-11.jpg">
+        <div class="port-thumb port-thumb-img"><img loading="lazy" src="images/img-11.jpg" alt="Booking Receipt and PDF Generator automation workflow"></div>
+        <div class="port-body"><span class="tag">AI Automation</span><h3>Booking Receipt & PDF Generator</h3><p>Email booking → receipt number → PDF receipt → auto email & confirm.</p><span class="view-btn"><svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>View project</span></div>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="view" id="view-how-it-works">
+  <div class="pad">
+    <div class="section-head center">
+      <div class="eyebrow">How It Works</div>
+      <h2 class="h2">A simple, honest process</h2>
+      <p class="lead center">No confusing back and forth — clear steps from first conversation to ongoing support.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="num">01</div><h3>Contact WEBDEV SA</h3><p>Reach out by phone, WhatsApp or the contact form.</p></div>
+      <div class="step"><div class="num">02</div><h3>Discuss Your Business</h3><p>We understand the problem you want solved.</p></div>
+      <div class="step"><div class="num">03</div><h3>Choose a Solution</h3><p>Pick the package or automation that fits.</p></div>
+      <div class="step"><div class="num">04</div><h3>Build</h3><p>Your website or system is built.</p></div>
+      <div class="step"><div class="num">05</div><h3>Review & Testing</h3><p>We test and you review and request changes.</p></div>
+      <div class="step"><div class="num">06</div><h3>Launch</h3><p>The site is deployed and handed over.</p></div>
+      <div class="step"><div class="num">07</div><h3>Support</h3><p>Ongoing help after launch, as needed.</p></div>
+    </div>
+    <div class="btn-row"><a href="#/contact" class="btn btn-primary">Get a Free Website Demo</a><a href="#/packages" class="btn btn-ghost">View Packages</a></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="view" id="view-about">
+  <div class="pad">
+    <div class="section-head">
+      <div class="eyebrow">About</div>
+      <h2 class="h2">WE BUILD. YOU GROW.</h2>
+      <p class="lead">We believe a website should do more than look professional — it should help solve a business problem. WEBDEV SA is a South African business focused on practical digital solutions, not design for its own sake. Every project starts with a conversation about what the business actually needs, and works backward from there.</p>
+    </div>
+    <div class="grid g3">
+      <div class="card"><h3>Websites</h3><p>Booking & enquiry systems</p></div>
+      <div class="card"><h3>Business Automation</h3><p>AI automation & workflows</p></div>
+      <div class="card"><h3>Customer Information Management</h3><p>Structured, organised, easy to use</p></div>
+    </div>
+    <div class="btn-row"><a href="#/contact" class="btn btn-primary">Contact WEBDEV SA</a></div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="view" id="view-contact">
+  <div class="pad">
+    <div class="section-head center">
+      <div class="eyebrow">Contact</div>
+      <h2 class="h2">Let's talk about your business</h2>
+      <p class="lead center">Your business has a problem. Your website can help solve it.</p>
+    </div>
+    <div class="grid g3" style="margin-bottom:36px;">
+      <div class="contact-box"><div class="icon-dot"><svg class="icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div><h3>Call or WhatsApp</h3><p>071 920 5239</p></div>
+      <div class="contact-box"><div class="icon-dot"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg></div><h3>Ask about AI Automation</h3><p>Booking & receipt automation from R2,800.</p></div>
+      <div class="contact-box"><div class="icon-dot"><svg class="icon" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div><h3>Location</h3><p>40 Barrow Street, Riverlea, Johannesburg, South Africa</p></div>
+    </div>
+
+    <div class="form-card">
+      <h3 style="margin-bottom:6px;">Request a Free Website Demo</h3>
+      <p class="lead" style="margin-bottom:22px;">No obligation — tell us about your business and we'll get back to you.</p>
+      <form id="contactForm" novalidate>
+        <div class="form-row">
+          <div class="field"><label for="fName">Name *</label><input type="text" id="fName" required></div>
+          <div class="field"><label for="fBusiness">Business name</label><input type="text" id="fBusiness"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label for="fPhone">Phone / WhatsApp *</label><input type="tel" id="fPhone" required></div>
+          <div class="field"><label for="fEmail">Email *</label><input type="email" id="fEmail" required></div>
+        </div>
+        <div class="field">
+          <label for="fNeed">What do you need? *</label>
+          <select id="fNeed" required>
+            <option value="">Select one</option>
+            <option>A new website</option>
+            <option>AI automation</option>
+            <option>Not sure yet — just enquiring</option>
+          </select>
+        </div>
+        <div class="field"><label for="fMsg">Message *</label><textarea id="fMsg" required placeholder="Tell us about your business and what problem you want the website to solve."></textarea></div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">Send Message</button>
+        <p id="formMsg"><svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px;"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg><span></span></p>
+      </form>
+    </div>
+
+    <div class="map-frame">
+      <iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+        src="https://www.google.com/maps?q=40+Barrow+Street,+Riverlea,+Johannesburg,+South+Africa&output=embed"
+        title="WEBDEV SA location — Riverlea, Johannesburg"></iframe>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <img class="foot-logo" src="images/img-01.png" alt="WEBDEV SA logo"><div class="brand" style="justify-content:center; margin-bottom:8px;">WEBDEV <span>SA</span></div>
+    <p>WE BUILD. YOU GROW.</p>
+    <div class="foot-links">
+      <a href="#/websites">Websites</a><a href="#/packages">Packages</a><a href="#/ai-automation">AI Automation</a>
+      <a href="#/our-work">Our Work</a><a href="#/how-it-works">How It Works</a><a href="#/about">About</a><a href="#/contact">Contact</a>
+    </div>
+    <div class="btn-row">
+      <a href="#/contact" class="btn btn-primary">Free Website Demo</a>
+      <a href="tel:0719205239" class="btn btn-ghost">Call 071 920 5239</a>
+    </div>
+    <p style="margin-top:24px;">&copy; 2026 WEBDEV SA. All rights reserved.</p>
+  </div>
+</footer>
+
+<div id="lightbox">
+  <div class="lb-box">
+    <button class="lb-close" onclick="closeLightbox()" aria-label="Close">
+      <svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <img class="lb-img" id="lbImg" alt="" style="display:none;">
+    <div class="lb-icon" id="lbIcon"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+    <span class="tag" id="lbTag"></span>
+    <h3 id="lbTitle" style="margin-bottom:10px;"></h3>
+    <p class="lead" id="lbDesc"></p>
+  </div>
+</div>
+
+<script>
+(function(){
+  var TITLES = {
+    'home':'WEBDEV SA — Business Websites & AI Automation, South Africa',
+    'websites':'Websites — WEBDEV SA',
+    'packages':'Packages & Pricing — WEBDEV SA',
+    'ai-automation':'AI Automation — WEBDEV SA',
+    'our-work':'Our Work — WEBDEV SA',
+    'how-it-works':'How It Works — WEBDEV SA',
+    'about':'About — WEBDEV SA',
+    'contact':'Contact — WEBDEV SA'
+  };
+  var ROUTES = Object.keys(TITLES);
+
+  /* ---- loading screen: min display time, tied to real page-load ---- */
+  var loader = document.getElementById('loader');
+  var loadStart = performance.now();
+  var MIN_MS = 1200;
+  function dismissLoader(){
+    var wait = Math.max(0, MIN_MS - (performance.now() - loadStart));
+    setTimeout(function(){ loader.classList.add('hide'); }, wait);
+  }
+  if(document.readyState === 'complete'){ dismissLoader(); }
+  else { window.addEventListener('load', dismissLoader); }
+
+  /* ---- mobile nav ---- */
+  var menuBtn = document.getElementById('menuBtn');
+  var navLinks = document.getElementById('navLinks');
+  var overlay = document.getElementById('overlay');
+  var menuIcon = document.getElementById('menuIcon');
+  var openSvg = '<path d="M3 6h18M3 12h18M3 18h18"/>';
+  var closeSvg = '<path d="M6 6l12 12M18 6L6 18"/>';
+  function closeMenu(){
+    navLinks.classList.remove('open'); overlay.classList.remove('open');
+    menuBtn.setAttribute('aria-expanded','false'); menuIcon.innerHTML = openSvg;
+  }
+  function toggleMenu(){
+    var open = navLinks.classList.toggle('open');
+    overlay.classList.toggle('open', open);
+    menuBtn.setAttribute('aria-expanded', open ? 'true':'false');
+    menuIcon.innerHTML = open ? closeSvg : openSvg;
+  }
+  menuBtn.addEventListener('click', toggleMenu);
+  overlay.addEventListener('click', closeMenu);
+
+  /* ---- router ---- */
+  function currentRoute(){
+    var h = location.hash.replace('#/','').replace('#','');
+    return ROUTES.indexOf(h) !== -1 ? h : 'home';
+  }
+  window.navigate = function(route){
+    if(ROUTES.indexOf(route) === -1) route = 'home';
+    if(location.hash !== '#/'+route){ location.hash = '#/'+route; }
+    else { render(route); }
+  };
+  function render(route){
+    document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+    document.getElementById('view-'+route).classList.add('active');
+    document.querySelectorAll('.nl').forEach(function(a){ a.classList.toggle('active', a.dataset.route === route); });
+    document.title = TITLES[route];
+    window.scrollTo(0,0);
+    closeMenu();
+  }
+  window.addEventListener('hashchange', function(){ render(currentRoute()); });
+  if(!location.hash){ location.hash = '#/home'; }
+  render(currentRoute());
+
+  /* ---- package / service request -> jump to contact, prefill ---- */
+  window.requestPackage = function(label){
+    navigate('contact');
+    setTimeout(function(){
+      var need = document.getElementById('fNeed');
+      var msg = document.getElementById('fMsg');
+      need.value = label.indexOf('AI') === 0 || label.toLowerCase().indexOf('automation') !== -1 ? 'AI automation' : 'A new website';
+      if(!msg.value){ msg.value = 'I am interested in: ' + label; }
+      document.getElementById('fName').focus();
+    }, 50);
+  };
+
+  /* ---- portfolio lightbox ---- */
+  var lb = document.getElementById('lightbox');
+  document.querySelectorAll('.port-card').forEach(function(card){
+    card.addEventListener('click', function(){
+      document.getElementById('lbTag').textContent = card.dataset.tag;
+      document.getElementById('lbTitle').textContent = card.dataset.title;
+      document.getElementById('lbDesc').textContent = card.dataset.desc;
+      var lbImg = document.getElementById('lbImg');
+      var lbIcon = document.getElementById('lbIcon');
+      if(card.dataset.img){
+        lbImg.src = card.dataset.img;
+        lbImg.alt = card.dataset.title;
+        lbImg.style.display = 'block';
+        lbIcon.style.display = 'none';
+      } else {
+        lbImg.style.display = 'none';
+        lbIcon.style.display = 'flex';
+      }
+      lb.classList.add('open');
+    });
+  });
+  function closeLb(){ lb.classList.remove('open'); }
+  window.closeLightbox = closeLb;
+  lb.addEventListener('click', function(e){ if(e.target === lb) closeLb(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeLb(); });
+
+  /* ---- contact form (Supabase-connected) ---- */
+  var SUPABASE_URL = 'https://qjixjmmipslbdlwlobea.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqaXhqbW1pcHNsYmRsd2xvYmVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NjU5NzMsImV4cCI6MjEwODM0MTk3M30.4inin-vY6f4vUw7y9EOZtBsziWO5uFu-8exd19tReac';
+  var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  var form = document.getElementById('contactForm');
+  var formMsg = document.getElementById('formMsg');
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    if(!form.checkValidity()){ form.reportValidity(); return; }
+
+    var submitBtn = form.querySelector('button[type="submit"]');
+    var originalLabel = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    var payload = {
+      name: document.getElementById('fName').value,
+      business_name: document.getElementById('fBusiness').value,
+      phone: document.getElementById('fPhone').value,
+      email: document.getElementById('fEmail').value,
+      need: document.getElementById('fNeed').value,
+      message: document.getElementById('fMsg').value
+    };
+
+    supabaseClient.functions.invoke('webdevsa-submit-lead', { body: payload })
+      .then(function(result){
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalLabel;
+        if(result.error || !result.data || !result.data.reference){
+          formMsg.classList.add('show');
+          formMsg.classList.remove('ok');
+          formMsg.querySelector('span').textContent = 'Something went wrong — please WhatsApp us instead on 071 920 5239.';
+          return;
+        }
+        var ref = result.data.reference;
+        formMsg.classList.add('show','ok');
+        formMsg.querySelector('span').textContent = 'Thank you — request received. Your reference number is ' + ref + '.' + (result.data.emailSent ? ' Check your email for confirmation.' : '') + ' WEBDEV SA will get back to you shortly.';
+        form.reset();
+      })
+      .catch(function(){
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalLabel;
+        formMsg.classList.add('show');
+        formMsg.classList.remove('ok');
+        formMsg.querySelector('span').textContent = 'Something went wrong — please WhatsApp us instead on 071 920 5239.';
+      });
+  });
+})();
+</script>
+</body>
+</html>
